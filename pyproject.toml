@@ -1,0 +1,13 @@
+[project]
+name = "textbook-analysis"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "marimo>=0.19.2",
+    "nbformat>=5.10.4",
+    "pymupdf>=1.26.7",
+    "requests>=2.32.5",
+    "ruff>=0.14.11",
+]
