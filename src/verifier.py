@@ -37,7 +37,7 @@ class FactVerifier:
             if self.provider == "google":
                 self.model_name = "gemini-3-pro-preview"
             else:
-                self.model_name = "gpt-4o"
+                self.model_name = "gpt-5.2"
         else:
             self.model_name = model_name
 

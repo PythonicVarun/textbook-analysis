@@ -119,7 +119,7 @@ with st.sidebar:
                 else "https://llmfoundry.straive.com/"
             ),
         )
-        model_name = st.text_input("Model Name", value="gpt-4o")
+        model_name = st.text_input("Model Name", value="gpt-5.2")
         st.caption("Verify against internal knowledge base.")
 
     st.divider()
