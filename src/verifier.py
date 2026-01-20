@@ -252,6 +252,11 @@ This is STEP 3 of 3 - the FINAL step. You receive the original text and verified
 - ℹ️ **INTERPRETATIVE DIFFERENCE**: Claim involves interpretation/framing that differs from sources
 - ⚡ **LACKS PRECISION**: Claim is vague, ambiguous, or missing important context
 - ❓ **UNABLE TO VERIFY**: Could not find authoritative sources in Step 2 verification
+- 🔴 **POTENTIALLY QUESTIONABLE (UNVERIFIED)**: Claim contradicts your training data BUT no verification sources were found to confirm/deny this. Use this category ONLY when:
+  * The claim seems factually incorrect based on your training knowledge
+  * NO verification sources were available in Step 2 to check the claim
+  * You want to flag it for manual review
+  * Mark this as speculative since you couldn't verify it externally
 
 **QUALITY CRITERIA:**
 - SOURCE INTEGRITY: NEVER cite a URL that doesn't appear in the verification results
@@ -315,6 +320,12 @@ You MUST use this exact structure:
 ### ❓ Unable to Verify
 [List any claims that could not be verified due to lack of sources in Step 2]
 [If all claims were verified, write: "All claims had sufficient verification sources."]
+
+### 🔴 Potentially Questionable (Unverified)
+[List claims that seem incorrect based on your training data but couldn't be verified with external sources]
+[Format: "**Claim:** [quote] - **Why Questionable:** [Explain why this contradicts your training knowledge] - **Status:** Could not find verification sources"]
+[If none, write: "No unverified questionable claims identified."]
+[If you list any claims here, add a disclaimer: "⚠️ Note: These are flagged based on training data only, not verified with external sources. Manual review recommended."]
 
 ## Conclusion
 [Write 2-3 sentences summarizing the overall accuracy of the text. Be balanced and fair. Acknowledge any verification limitations.]"""
@@ -536,7 +547,7 @@ Remember to:
             self._update_progress(2, "in_progress", "Searching and verifying claims...")
 
             iteration = 0
-            max_iterations = 50
+            max_iterations = 100
             while iteration < max_iterations:
                 iteration += 1
 
@@ -647,6 +658,11 @@ This is STEP 3 of 3 - the FINAL step. You receive the original text and verified
 - ℹ️ **INTERPRETATIVE DIFFERENCE**: Claim involves interpretation/framing that differs from sources
 - ⚡ **LACKS PRECISION**: Claim is vague, ambiguous, or missing important context
 - ❓ **UNABLE TO VERIFY**: Could not find authoritative sources in Step 2 verification
+- 🔴 **POTENTIALLY QUESTIONABLE (UNVERIFIED)**: Claim contradicts your training data BUT no verification sources were found to confirm/deny this. Use this category ONLY when:
+  * The claim seems factually incorrect based on your training knowledge
+  * NO verification sources with fetched content were available in Step 2 to check the claim
+  * You want to flag it for manual review
+  * Mark this as speculative since you couldn't verify it externally
 
 **QUALITY CRITERIA:**
 - SOURCE INTEGRITY: NEVER cite a URL that doesn't appear in the verification results with "Content Fetched: Yes"
@@ -710,6 +726,12 @@ You MUST use this exact structure:
 ### ❓ Unable to Verify
 [List any claims that could not be verified due to lack of fetched sources in Step 2]
 [If all claims were verified, write: "All claims had sufficient verification sources."]
+
+### 🔴 Potentially Questionable (Unverified)
+[List claims that seem incorrect based on your training data but couldn't be verified with fetched external sources]
+[Format: "**Claim:** [quote] - **Why Questionable:** [Explain why this contradicts your training knowledge] - **Status:** Could not find verification sources with fetched content"]
+[If none, write: "No unverified questionable claims identified."]
+[If you list any claims here, add a disclaimer: "⚠️ Note: These are flagged based on training data only, not verified with external sources. Manual review recommended."]
 
 ## Conclusion
 [Write 2-3 sentences summarizing the overall accuracy of the text. Be balanced and fair. Acknowledge any verification limitations.]"""

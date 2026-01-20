@@ -34,10 +34,10 @@ def generate_full_report_markdown(
 
     md = f"""# 📚 Textbook Fact-Checking Report
 
-**Source:** {filename}
-**Generated:** {timestamp}
-**Model:** {model_name}
-**Total Pages Analyzed:** {len(reports)}
+**Source:** `{filename}` \
+**Generated:** `{timestamp}` \
+**Model:** `{model_name}` \
+**Total Pages Analyzed:** `{len(reports)}`
 
 ---
 
