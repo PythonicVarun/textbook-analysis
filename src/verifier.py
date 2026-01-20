@@ -224,31 +224,43 @@ This is STEP 3 of 3 - the FINAL step. You receive the original text and verified
 - Step 2 (Completed): Claims were verified with sources
 - Step 3 (YOU): Analyze discrepancies and generate final report
 
+**CRITICAL SOURCE RESTRICTION:**
+⚠️ YOU MUST ONLY USE SOURCES THAT APPEAR IN THE "VERIFIED INFORMATION" SECTION BELOW ⚠️
+- DO NOT invent, fabricate, or hallucinate any URLs or sources
+- DO NOT use your training data as a source - ONLY use the provided verification results
+- DO NOT cite any URL that was not explicitly listed in the verified information
+- If a claim was not verified in Step 2, mark it as "Unable to verify" - do NOT make up sources
+- Every source URL you cite MUST be copy-pasted exactly from the verification results
+- If verification results are incomplete, acknowledge this honestly
+
 **YOUR WORK INSTRUCTIONS:**
 1. Read the original text carefully
-2. Review all verified information and sources
-3. Compare each claim in the original text against verified facts
+2. Review ONLY the verified information and sources provided below
+3. Compare each claim in the original text against the verified facts FROM THE PROVIDED SOURCES ONLY
 4. Categorize each claim using the category system below
 5. Only report claims that have issues OR are particularly significant
-6. If everything is accurate, state that clearly
-7. Provide specific corrections with source URLs
+6. If everything is accurate according to the verified sources, state that clearly
+7. Provide specific corrections with source URLs FROM THE VERIFICATION RESULTS ONLY
 8. Write in clear, professional language
 9. Use the EXACT output format specified below
+10. If a source URL was not fetched/verified in Step 2, DO NOT USE IT
 
 **CATEGORY SYSTEM (use these exact symbols and labels):**
-- ✅ **VERIFIED CORRECT**: Claim accurately matches verified sources
+- ✅ **VERIFIED CORRECT**: Claim accurately matches verified sources (sources must be from Step 2)
 - ❌ **FACTUAL ERROR**: Claim contradicts verified sources (wrong date, name, number, event, etc.)
 - ⚠️ **OUTDATED INFORMATION**: Claim was historically correct but is no longer current
 - ℹ️ **INTERPRETATIVE DIFFERENCE**: Claim involves interpretation/framing that differs from sources
 - ⚡ **LACKS PRECISION**: Claim is vague, ambiguous, or missing important context
+- ❓ **UNABLE TO VERIFY**: Could not find authoritative sources in Step 2 verification
 
 **QUALITY CRITERIA:**
-- Accuracy: Only flag genuine issues
+- SOURCE INTEGRITY: NEVER cite a URL that doesn't appear in the verification results
+- Accuracy: Only flag genuine issues based on fetched/verified sources
 - Specificity: Explain exactly what's wrong and what's correct
-- Evidence: Always include source URLs
+- Evidence: Always include source URLs COPIED EXACTLY from verification results
 - Clarity: Use simple, direct language
 - Completeness: Don't miss significant issues
-- Conciseness: Don't repeat verified correct information unless noteworthy
+- Honesty: If verification was incomplete, say so
 
 **MANDATORY OUTPUT FORMAT:**
 You MUST use this exact structure:
@@ -261,15 +273,15 @@ You MUST use this exact structure:
 ## Detailed Analysis
 
 ### ✅ Verified Correct
-[List 2-3 important claims that were verified as accurate, if any. Format: "• [Claim]: Confirmed by [source]"]
+[List 2-3 important claims that were verified as accurate, if any. Format: "• [Claim]: Confirmed by [source FROM VERIFICATION RESULTS]"]
 [If all claims are correct, state: "All factual claims in the text have been verified as accurate."]
 
 ### ❌ Factual Errors
 [For each error, use this format:]
 **Claim:** "[Direct quote from original text]"
 - **Issue:** [Explain specifically what is incorrect]
-- **Correct Information:** [State the accurate fact]
-- **Source:** [Source name with URL]
+- **Correct Information:** [State the accurate fact FROM VERIFIED SOURCES]
+- **Source:** [Source name with URL - MUST BE FROM VERIFICATION RESULTS]
 
 [If none, write: "No factual errors found."]
 
@@ -277,8 +289,8 @@ You MUST use this exact structure:
 [For each outdated item, use this format:]
 **Claim:** "[Direct quote from original text]"
 - **Issue:** [Explain why this is outdated]
-- **Current Information:** [State the up-to-date fact]
-- **Source:** [Source name with URL]
+- **Current Information:** [State the up-to-date fact FROM VERIFIED SOURCES]
+- **Source:** [Source name with URL - MUST BE FROM VERIFICATION RESULTS]
 
 [If none, write: "No outdated information found."]
 
@@ -287,7 +299,7 @@ You MUST use this exact structure:
 **Claim:** "[Direct quote from original text]"
 - **Issue:** [Explain how the interpretation differs]
 - **Alternative Perspective:** [What sources emphasize or frame differently]
-- **Source:** [Source name with URL]
+- **Source:** [Source name with URL - MUST BE FROM VERIFICATION RESULTS]
 
 [If none, write: "No significant interpretative differences found."]
 
@@ -295,13 +307,17 @@ You MUST use this exact structure:
 [For each imprecise claim, use this format:]
 **Claim:** "[Direct quote from original text]"
 - **Issue:** [Explain what is vague or missing]
-- **More Precise Information:** [Provide the more accurate/complete formulation]
-- **Source:** [Source name with URL]
+- **More Precise Information:** [Provide the more accurate/complete formulation FROM VERIFIED SOURCES]
+- **Source:** [Source name with URL - MUST BE FROM VERIFICATION RESULTS]
 
 [If none, write: "No precision issues found."]
 
+### ❓ Unable to Verify
+[List any claims that could not be verified due to lack of sources in Step 2]
+[If all claims were verified, write: "All claims had sufficient verification sources."]
+
 ## Conclusion
-[Write 2-3 sentences summarizing the overall accuracy of the text. Be balanced and fair.]"""
+[Write 2-3 sentences summarizing the overall accuracy of the text. Be balanced and fair. Acknowledge any verification limitations.]"""
 
             final_prompt = f"""{final_system}
 
@@ -310,8 +326,10 @@ You MUST use this exact structure:
 {text_chunk}
 ```
 
-**VERIFIED INFORMATION:**
+**VERIFIED INFORMATION (USE ONLY THESE SOURCES):**
 {verification_results}
+
+⚠️ REMINDER: Only cite URLs that appear above. Do not invent or hallucinate any sources.
 
 **Generate the final fact-checking report using the exact format specified above:**"""
 
@@ -596,34 +614,48 @@ Remember to:
 **YOUR ROLE IN THE PIPELINE:**
 This is STEP 3 of 3 - the FINAL step. You receive the original text and verified information, then produce the final report.
 - Step 1 (Completed): Claims were extracted
-- Step 2 (Completed): Claims were verified with sources
+- Step 2 (Completed): Claims were verified with sources (URLs were actually fetched)
 - Step 3 (YOU): Analyze discrepancies and generate final report
+
+**CRITICAL SOURCE RESTRICTION - READ CAREFULLY:**
+⚠️ YOU MUST ONLY USE SOURCES THAT APPEAR IN THE "VERIFIED INFORMATION" SECTION BELOW ⚠️
+- DO NOT invent, fabricate, or hallucinate any URLs or sources
+- DO NOT use your training data or prior knowledge as a source - ONLY use the provided verification results
+- DO NOT cite any URL that was not explicitly listed and fetched in the verified information
+- If a claim was not verified in Step 2, mark it as "Unable to verify" - do NOT make up sources
+- Every source URL you cite MUST be copy-pasted exactly from the verification results
+- Only use sources marked as "Content Fetched: Yes" - do not use unfetched URLs
+- If verification results are incomplete, acknowledge this honestly
+- NEVER generate fake URLs like "example.com" or "source.org"
 
 **YOUR WORK INSTRUCTIONS:**
 1. Read the original text carefully
-2. Review all verified information and sources
-3. Compare each claim in the original text against verified facts
+2. Review ONLY the verified information and sources provided below (the ones that were actually fetched)
+3. Compare each claim in the original text against the verified facts FROM THE PROVIDED FETCHED SOURCES ONLY
 4. Categorize each claim using the category system below
 5. Only report claims that have issues OR are particularly significant
-6. If everything is accurate, state that clearly
-7. Provide specific corrections with source URLs
+6. If everything is accurate according to the verified sources, state that clearly
+7. Provide specific corrections with source URLs COPIED EXACTLY FROM THE VERIFICATION RESULTS
 8. Write in clear, professional language
 9. Use the EXACT output format specified below
+10. If a source URL was not fetched/verified in Step 2, DO NOT USE IT
 
 **CATEGORY SYSTEM (use these exact symbols and labels):**
-- ✅ **VERIFIED CORRECT**: Claim accurately matches verified sources
+- ✅ **VERIFIED CORRECT**: Claim accurately matches verified sources (sources must be from Step 2 with fetched content)
 - ❌ **FACTUAL ERROR**: Claim contradicts verified sources (wrong date, name, number, event, etc.)
 - ⚠️ **OUTDATED INFORMATION**: Claim was historically correct but is no longer current
 - ℹ️ **INTERPRETATIVE DIFFERENCE**: Claim involves interpretation/framing that differs from sources
 - ⚡ **LACKS PRECISION**: Claim is vague, ambiguous, or missing important context
+- ❓ **UNABLE TO VERIFY**: Could not find authoritative sources in Step 2 verification
 
 **QUALITY CRITERIA:**
-- Accuracy: Only flag genuine issues
+- SOURCE INTEGRITY: NEVER cite a URL that doesn't appear in the verification results with "Content Fetched: Yes"
+- Accuracy: Only flag genuine issues based on fetched/verified sources
 - Specificity: Explain exactly what's wrong and what's correct
-- Evidence: Always include source URLs
+- Evidence: Always include source URLs COPIED EXACTLY from verification results
 - Clarity: Use simple, direct language
 - Completeness: Don't miss significant issues
-- Conciseness: Don't repeat verified correct information unless noteworthy
+- Honesty: If verification was incomplete, say so
 
 **MANDATORY OUTPUT FORMAT:**
 You MUST use this exact structure:
@@ -636,15 +668,15 @@ You MUST use this exact structure:
 ## Detailed Analysis
 
 ### ✅ Verified Correct
-[List 2-3 important claims that were verified as accurate, if any. Format: "• [Claim]: Confirmed by [source]"]
+[List 2-3 important claims that were verified as accurate, if any. Format: "• [Claim]: Confirmed by [source FROM VERIFICATION RESULTS]"]
 [If all claims are correct, state: "All factual claims in the text have been verified as accurate."]
 
 ### ❌ Factual Errors
 [For each error, use this format:]
 **Claim:** "[Direct quote from original text]"
 - **Issue:** [Explain specifically what is incorrect]
-- **Correct Information:** [State the accurate fact]
-- **Source:** [Source name with URL]
+- **Correct Information:** [State the accurate fact FROM VERIFIED SOURCES]
+- **Source:** [Source name with URL - MUST BE FROM VERIFICATION RESULTS WITH FETCHED CONTENT]
 
 [If none, write: "No factual errors found."]
 
@@ -652,8 +684,8 @@ You MUST use this exact structure:
 [For each outdated item, use this format:]
 **Claim:** "[Direct quote from original text]"
 - **Issue:** [Explain why this is outdated]
-- **Current Information:** [State the up-to-date fact]
-- **Source:** [Source name with URL]
+- **Current Information:** [State the up-to-date fact FROM VERIFIED SOURCES]
+- **Source:** [Source name with URL - MUST BE FROM VERIFICATION RESULTS WITH FETCHED CONTENT]
 
 [If none, write: "No outdated information found."]
 
@@ -662,7 +694,7 @@ You MUST use this exact structure:
 **Claim:** "[Direct quote from original text]"
 - **Issue:** [Explain how the interpretation differs]
 - **Alternative Perspective:** [What sources emphasize or frame differently]
-- **Source:** [Source name with URL]
+- **Source:** [Source name with URL - MUST BE FROM VERIFICATION RESULTS WITH FETCHED CONTENT]
 
 [If none, write: "No significant interpretative differences found."]
 
@@ -670,13 +702,17 @@ You MUST use this exact structure:
 [For each imprecise claim, use this format:]
 **Claim:** "[Direct quote from original text]"
 - **Issue:** [Explain what is vague or missing]
-- **More Precise Information:** [Provide the more accurate/complete formulation]
-- **Source:** [Source name with URL]
+- **More Precise Information:** [Provide the more accurate/complete formulation FROM VERIFIED SOURCES]
+- **Source:** [Source name with URL - MUST BE FROM VERIFICATION RESULTS WITH FETCHED CONTENT]
 
 [If none, write: "No precision issues found."]
 
+### ❓ Unable to Verify
+[List any claims that could not be verified due to lack of fetched sources in Step 2]
+[If all claims were verified, write: "All claims had sufficient verification sources."]
+
 ## Conclusion
-[Write 2-3 sentences summarizing the overall accuracy of the text. Be balanced and fair.]"""
+[Write 2-3 sentences summarizing the overall accuracy of the text. Be balanced and fair. Acknowledge any verification limitations.]"""
 
             final_messages = [
                 {"role": "system", "content": final_system},
@@ -687,8 +723,14 @@ You MUST use this exact structure:
 {text_chunk}
 ```
 
-**VERIFIED INFORMATION:**
+**VERIFIED INFORMATION (USE ONLY THESE SOURCES - ONLY URLs WITH "Content Fetched: Yes"):**
 {verification_results}
+
+⚠️ CRITICAL REMINDER:
+- Only cite URLs that appear above with "Content Fetched: Yes"
+- Do not invent, fabricate, or hallucinate any sources
+- Copy-paste URLs exactly as they appear in the verification results
+- If a claim wasn't verified, mark it as "Unable to Verify"
 
 **Generate the final fact-checking report using the exact format specified above:**""",
                 },
