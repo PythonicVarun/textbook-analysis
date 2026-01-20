@@ -6,6 +6,8 @@ from google import genai
 from google.genai import types
 from openai import OpenAI
 
+from src.tools import GoogleSearchTool, WebCrawler
+
 
 class FactVerifier:
     def __init__(
@@ -15,6 +17,7 @@ class FactVerifier:
         model_name=None,
         provider="google",
         progress_callback=None,
+        use_crawl4ai=True,
     ):
         self.api_key = api_key
         self.base_url = base_url
@@ -23,6 +26,12 @@ class FactVerifier:
         self.progress_callback = (
             progress_callback  # Callback function for progress updates
         )
+        self.use_crawl4ai = use_crawl4ai
+
+        # Initialize crawl4ai tools
+        if self.use_crawl4ai:
+            self.search_tool = GoogleSearchTool(headless=True, verbose=False)
+            self.web_crawler = WebCrawler(headless=True, verbose=False)
 
         if not model_name:
             if self.provider == "google":
@@ -115,7 +124,7 @@ This is STEP 1 of 3. Your job is ONLY to extract claims. You will NOT verify the
             )
             extracted_claims = response_1.text
 
-            print(extracted_claims)
+            # print(extracted_claims)
 
             self._update_progress(1, "completed", f"Extracted claims successfully")
 
@@ -394,13 +403,20 @@ This is STEP 2 of 3. You receive extracted claims and must verify them using sea
 
 **YOUR WORK INSTRUCTIONS:**
 1. Review the list of claims provided
-2. For EACH claim, perform a Google Search
-3. Search specifically for the factual elements (dates, names, events, numbers)
-4. Identify 2-3 authoritative sources per claim when possible
-5. Record the EXACT URLs of all sources used
-6. Extract relevant quotes or facts from each source
-7. Note if sources conflict or disagree
-8. Summarize what the sources collectively indicate
+2. For EACH claim, perform a Google Search using the google_search tool
+3. When you find relevant URLs in search results, use the fetch_url tool to retrieve full content
+4. Search specifically for the factual elements (dates, names, events, numbers)
+5. Identify 2-3 authoritative sources per claim when possible
+6. Record the EXACT URLs of all sources used
+7. Extract relevant quotes or facts from each source BY FETCHING THE URL
+8. Note if sources conflict or disagree
+9. Summarize what the sources collectively indicate
+
+**CRITICAL WORKFLOW:**
+- First: Use google_search to find relevant sources
+- Second: Use fetch_url on the most authoritative URLs from search results
+- Third: Extract specific information from the fetched content
+- Fourth: Compare information across multiple sources
 
 **SOURCE QUALITY PRIORITY (search for these first):**
 1. Government/official websites (.gov, .edu)
@@ -410,11 +426,12 @@ This is STEP 2 of 3. You receive extracted claims and must verify them using sea
 5. Established encyclopedias and reference works
 
 **MANDATORY REQUIREMENTS:**
-- Use Google Search for EVERY claim (no exceptions)
+- Use google_search for EVERY claim (no exceptions)
+- Use fetch_url to verify content from at least 2 URLs per claim
 - Extract and record EXACT URLs (not just domain names)
-- Quote specific passages that verify or contradict the claim
+- Quote specific passages that verify or contradict the claim FROM THE FETCHED CONTENT
 - If you cannot find sources, state that explicitly
-- If sources conflict, document both sides
+- If sources conflict, document both sides with quotes from actual fetched content
 
 **OUTPUT FORMAT (strict):**
 For each claim, use this exact structure:
@@ -424,26 +441,32 @@ For each claim, use this exact structure:
 
 **Search Query Used:** "[Your search query]"
 
-**Sources Found:**
+**Sources Found and Verified:**
 1. **[Source Name/Title]**
-   - URL: [Complete URL]
-   - Relevant Information: "[Direct quote or specific fact]"
-   - Date Published: [If available]
+- URL: [Complete URL]
+- Content Fetched: Yes/No
+- Relevant Information: "[Direct quote from fetched content or snippet]"
+- Date Published: [If available]
+- Verification Status: [Confirms/Contradicts/Partially Supports]
 
 2. **[Source Name/Title]**
-   - URL: [Complete URL]
-   - Relevant Information: "[Direct quote or specific fact]"
-   - Date Published: [If available]
+- URL: [Complete URL]
+- Content Fetched: Yes/No
+- Relevant Information: "[Direct quote from fetched content or snippet]"
+- Date Published: [If available]
+- Verification Status: [Confirms/Contradicts/Partially Supports]
 
-**Verification Summary:** [What the sources indicate about this claim - does it confirm, contradict, or partially support?]
----"""
+**Verification Summary:** [What the sources indicate about this claim based on fetched content - does it confirm, contradict, or partially support?]
+---
+
+**IMPORTANT:** You MUST use the tools (google_search and fetch_url) for every claim. Do not just rely on snippets - fetch the actual URLs to verify content."""
 
             tools = [
                 {
                     "type": "function",
                     "function": {
                         "name": "google_search",
-                        "description": "Search the web for information using Google to verify claims.",
+                        "description": "Search the web for information using Google to verify claims. Returns search results as markdown with titles, URLs, and snippets.",
                         "parameters": {
                             "type": "object",
                             "properties": {
@@ -455,7 +478,24 @@ For each claim, use this exact structure:
                             "required": ["query"],
                         },
                     },
-                }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "fetch_url",
+                        "description": "Fetch the content of a specific URL and return it as markdown. Use this to get detailed information from a source found via search. You MUST use this tool to verify the actual content of URLs found in search results.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "url": {
+                                    "type": "string",
+                                    "description": "The URL to fetch content from.",
+                                }
+                            },
+                            "required": ["url"],
+                        },
+                    },
+                },
             ]
 
             verification_messages = [
@@ -465,44 +505,86 @@ For each claim, use this exact structure:
                     "content": f"""**Claims to verify:**
 {extracted_claims}
 
-**Begin verification (use the exact format above for each claim):**""",
+**Begin verification (use the exact format above for each claim):**
+
+Remember to:
+1. Use google_search for each claim
+2. Use fetch_url on at least 2 authoritative URLs from the search results
+3. Extract quotes from the fetched content, not just snippets
+4. Document which URLs you actually fetched and verified""",
                 },
             ]
 
             self._update_progress(2, "in_progress", "Searching and verifying claims...")
 
-            resp2 = self.client.chat.completions.create(
-                model=self.model_name, messages=verification_messages, tools=tools
-            )
+            iteration = 0
+            max_iterations = 50
+            while iteration < max_iterations:
+                iteration += 1
 
-            message = resp2.choices[0].message
-            verification_results = message.content
-
-            # Handle tool calls loop for Step 2
-            if message.tool_calls:
-                verification_messages.append(message)
-                for tool_call in message.tool_calls:
-                    if tool_call.function.name == "google_search":
-                        try:
-                            args = json.loads(tool_call.function.arguments)
-                            query = args.get("query")
-                            search_result = self._perform_google_search(query)
-                        except Exception as e:
-                            search_result = f"Error performing search: {str(e)}"
-
-                        verification_messages.append(
-                            {
-                                "role": "tool",
-                                "tool_call_id": tool_call.id,
-                                "content": search_result,
-                            }
-                        )
-
-                # Get final response for Step 2
-                resp2_final = self.client.chat.completions.create(
+                resp2 = self.client.chat.completions.create(
                     model=self.model_name, messages=verification_messages, tools=tools
                 )
-                verification_results = resp2_final.choices[0].message.content
+
+                message = resp2.choices[0].message
+
+                # If no tool calls, we're done with this step
+                if not message.tool_calls:
+                    verification_results = message.content
+                    break
+
+                # Add assistant's message with tool calls
+                verification_messages.append(
+                    {
+                        "role": "assistant",
+                        "content": message.content,
+                        "tool_calls": [
+                            {
+                                "id": tc.id,
+                                "type": tc.type,
+                                "function": {
+                                    "name": tc.function.name,
+                                    "arguments": tc.function.arguments,
+                                },
+                            }
+                            for tc in message.tool_calls
+                        ],
+                    }
+                )
+
+                # Process all tool calls
+                for tool_call in message.tool_calls:
+                    try:
+                        args = json.loads(tool_call.function.arguments)
+                        print(
+                            f"[Iteration {iteration}] Performing tool call: {tool_call.function.name} with args {args}"
+                        )
+
+                        if tool_call.function.name == "google_search":
+                            query = args.get("query")
+                            tool_result = self._perform_google_search(query)
+                        elif tool_call.function.name == "fetch_url":
+                            url = args.get("url")
+                            tool_result = self._fetch_url(url)
+                        else:
+                            tool_result = f"Unknown tool: {tool_call.function.name}"
+
+                    except Exception as e:
+                        tool_result = (
+                            f"Error performing {tool_call.function.name}: {str(e)}"
+                        )
+
+                    # Add tool result to messages
+                    verification_messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "content": tool_result,
+                        }
+                    )
+
+            if iteration >= max_iterations:
+                verification_results = "Verification process reached maximum iterations. Proceeding with available data."
 
             self._update_progress(2, "completed", "Verification complete")
 
@@ -635,8 +717,21 @@ You MUST use this exact structure:
 
     def _perform_google_search(self, query: str) -> str:
         """
-        Proxy search via Gemini API.
+        Perform Google search using crawl4ai or fall back to Gemini API.
         """
+        # Try crawl4ai first if enabled
+        if self.use_crawl4ai:
+            try:
+                result = self.search_tool.search_and_get_markdown(
+                    query, num_results=10, max_length=8000
+                )
+                # print(result)
+                if result and not result.startswith("Search failed"):
+                    return result
+            except Exception as e:
+                print(f"crawl4ai search failed, falling back to Gemini: {e}")
+
+        # Fall back to Gemini API for search
         if not self.gemini_api_key:
             return (
                 "Error: Search unavailable (Missing GEMINI_API_KEY for search proxy)."
@@ -668,3 +763,57 @@ Focus on credible sources (government, academic, reputable news, official docs).
             return response.text if response.text else "No results found."
         except Exception as e:
             return f"Search error: {str(e)}"
+
+    def _fetch_url(self, url: str, max_length: int = 10000) -> str:
+        """
+        Fetch a URL and return its content as markdown using crawl4ai.
+
+        Args:
+            url: The URL to fetch
+
+        Returns:
+            Markdown content from the URL
+        """
+        if not self.use_crawl4ai:
+            return f"Error: Web crawling not enabled. Set use_crawl4ai=True."
+
+        try:
+            result = self.web_crawler.get_markdown_content(url, max_length=max_length)
+            # print(result)
+            return result
+        except Exception as e:
+            return f"Error fetching URL {url}: {str(e)}"
+
+    def _fetch_multiple_urls(self, urls: list[str], max_length: int = 5000) -> str:
+        """
+        Fetch multiple URLs and return their combined markdown content.
+
+        Args:
+            urls: List of URLs to fetch
+            max_length: Maximum length per URL
+
+        Returns:
+            Combined markdown content from all URLs
+        """
+        if not self.use_crawl4ai:
+            return "Error: Web crawling not enabled. Set use_crawl4ai=True."
+
+        try:
+            results = self.web_crawler.fetch_multiple_urls(urls)
+            output = ""
+
+            for result in results:
+                if result["success"]:
+                    content = result["markdown"] or ""
+                    if len(content) > max_length:
+                        content = content[:max_length] + "\n\n... [Content truncated]"
+
+                    output += f"\n\n## Content from: {result['url']}\n\n"
+                    output += content
+                else:
+                    output += f"\n\n## Failed to fetch: {result['url']}\n"
+                    output += f"Error: {result['error']}\n"
+
+            return output.strip()
+        except Exception as e:
+            return f"Error fetching URLs: {str(e)}"

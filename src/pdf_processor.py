@@ -27,3 +27,7 @@ class PDFProcessor:
             chunks.append(text[start:end])
             start += chunk_size - overlap
         return chunks
+
+    def close(self):
+        """Closes the PDF document."""
+        self.doc.close()
