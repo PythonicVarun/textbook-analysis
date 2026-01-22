@@ -1,0 +1,78 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: 🚀 Deploy static content to Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["master"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️ Checkout
+        uses: actions/checkout@v4
+
+      - name: 🙃 Install tools
+        run: sudo apt-get update && sudo apt-get install -y pandoc minify
+
+      - name: 🔨 Build Site
+        run: |
+          mkdir -p _site
+          # Copy datastory files
+          cp -r datastory/* _site/
+
+          # Convert README to HTML
+          mkdir -p _site/readme
+          curl -sL https://gist.githubusercontent.com/killercup/5917178/raw/pandoc.css -o _site/readme/theme.css
+          pandoc README.md -o _site/readme/index.html --standalone --metadata title="Textbook Analysis" --webtex --css theme.css
+
+          # Convert report.md to HTML
+          mkdir -p _site/datastory/report
+          curl -sL https://gist.githubusercontent.com/killercup/5917178/raw/pandoc.css -o _site/datastory/report/theme.css
+          pandoc datastory/report.md -o _site/datastory/report/index.html --standalone --metadata title="Textbook Fact-Checking Report" --webtex --css theme.css
+
+      - name: 📂 Minify static files
+        run: |
+          find _site -type f \( -name "*.html" -o -name "*.css" -o -name "*.js" -o -name "*.json" \) -exec minify -o {} {} \;
+
+      - name: 🖋️ Add credits to CSS
+        run: |
+          echo "/* Credits: https://gist.github.com/killercup/5917178#file-pandoc-css */" | cat - _site/readme/theme.css > temp && mv temp _site/readme/theme.css
+          echo "/* Credits: https://gist.github.com/killercup/5917178#file-pandoc-css */" | cat - _site/datastory/report/theme.css > temp && mv temp _site/datastory/report/theme.css
+
+      - name: 📦 Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './_site'
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⚙️ Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: 🌐 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages

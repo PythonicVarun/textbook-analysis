@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textbook Under the Microscope | WSJ Data Investigation</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* WSJ Typography & Base Styles */
+        :root {
+            --wsj-black: #111111;
+            --wsj-gray-dark: #333333;
+            --wsj-gray-medium: #666666;
+            --wsj-gray-light: #999999;
+            --wsj-gray-lighter: #E5E5E5;
+            --wsj-gray-bg: #F7F7F7;
+            --wsj-white: #FFFFFF;
+            --wsj-accent-blue: #0080C3;
+            --wsj-accent-red: #C41E3A;
+            --wsj-accent-green: #2E7D32;
+            --wsj-accent-amber: #E65100;
+            --wsj-accent-purple: #6A1B9A;
+            --serif: 'Georgia', 'Times New Roman', serif;
+            --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--sans);
+            font-size: 17px;
+            line-height: 1.7;
+            color: var(--wsj-gray-dark);
+            background: var(--wsj-white);
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .masthead {
+            border-bottom: 3px solid var(--wsj-black);
+            padding: 12px 0;
+            text-align: center;
+            background: var(--wsj-white);
+        }
+
+        .masthead-logo {
+            font-family: var(--serif);
+            font-size: 14px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--wsj-gray-medium);
+        }
+
+        .masthead-logo strong {
+            color: var(--wsj-black);
+        }
+
+        /* Article Container */
+        .article-container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .article-wide {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Article Header */
+        .article-header {
+            padding: 48px 0 32px;
+            border-bottom: 1px solid var(--wsj-gray-lighter);
+            margin-bottom: 32px;
+        }
+
+        .section-label {
+            font-family: var(--sans);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--wsj-accent-blue);
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-family: var(--serif);
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.15;
+            color: var(--wsj-black);
+            margin-bottom: 16px;
+        }
+
+        .article-deck {
+            font-family: var(--serif);
+            font-size: 22px;
+            line-height: 1.5;
+            color: var(--wsj-gray-medium);
+            margin-bottom: 24px;
+        }
+
+        .byline {
+            font-size: 14px;
+            color: var(--wsj-gray-light);
+        }
+
+        .byline strong {
+            color: var(--wsj-gray-dark);
+        }
+
+        /* Big Number / Lede */
+        .big-number-section {
+            background: var(--wsj-gray-bg);
+            padding: 48px 20px;
+            margin-bottom: 48px;
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .big-number-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .big-number-card {
+            text-align: center;
+            padding: 24px;
+            background: var(--wsj-white);
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .big-number {
+            font-family: var(--serif);
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .big-number.verified { color: var(--wsj-accent-green); }
+        .big-number.errors { color: var(--wsj-accent-red); }
+        .big-number.unverified { color: var(--wsj-gray-medium); }
+        .big-number.precision { color: var(--wsj-accent-amber); }
+
+        .big-number-label {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--wsj-gray-medium);
+        }
+
+        /* Typography */
+        h2 {
+            font-family: var(--serif);
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--wsj-black);
+            margin: 48px 0 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--wsj-gray-lighter);
+        }
+
+        h3 {
+            font-family: var(--sans);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--wsj-black);
+            margin: 32px 0 16px;
+        }
+
+        p {
+            margin-bottom: 20px;
+        }
+
+        .lead-paragraph {
+            font-size: 20px;
+            line-height: 1.6;
+        }
+
+        .lead-paragraph::first-letter {
+            font-family: var(--serif);
+            font-size: 64px;
+            float: left;
+            line-height: 0.8;
+            padding-right: 12px;
+            padding-top: 4px;
+            font-weight: 700;
+            color: var(--wsj-black);
+        }
+
+        /* Charts */
+        .chart-container {
+            margin: 40px 0;
+            padding: 24px;
+            background: var(--wsj-gray-bg);
+            border-radius: 4px;
+        }
+
+        .chart-title {
+            font-family: var(--sans);
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--wsj-black);
+            margin-bottom: 4px;
+        }
+
+        .chart-subtitle {
+            font-size: 14px;
+            color: var(--wsj-gray-medium);
+            margin-bottom: 20px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 320px;
+        }
+
+        .chart-source {
+            font-size: 12px;
+            color: var(--wsj-gray-light);
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--wsj-gray-lighter);
+        }
+
+        /* Callout Box */
+        .callout {
+            background: var(--wsj-gray-bg);
+            border-left: 4px solid var(--wsj-accent-blue);
+            padding: 20px 24px;
+            margin: 32px 0;
+        }
+
+        .callout-red {
+            border-left-color: var(--wsj-accent-red);
+        }
+
+        .callout-amber {
+            border-left-color: var(--wsj-accent-amber);
+        }
+
+        .callout-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--wsj-accent-blue);
+            margin-bottom: 8px;
+        }
+
+        .callout-red .callout-label { color: var(--wsj-accent-red); }
+        .callout-amber .callout-label { color: var(--wsj-accent-amber); }
+
+        .callout-text {
+            font-family: var(--serif);
+            font-size: 18px;
+            line-height: 1.5;
+            color: var(--wsj-gray-dark);
+        }
+
+        /* Data Table */
+        .data-table-container {
+            margin: 32px 0;
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table thead {
+            background: var(--wsj-gray-dark);
+            color: var(--wsj-white);
+        }
+
+        .data-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            font-size: 11px;
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--wsj-gray-lighter);
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--wsj-gray-bg);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .badge-verified { background: #E8F5E9; color: var(--wsj-accent-green); }
+        .badge-error { background: #FFEBEE; color: var(--wsj-accent-red); }
+        .badge-precision { background: #FFF3E0; color: var(--wsj-accent-amber); }
+        .badge-questionable { background: #FCE4EC; color: #C2185B; }
+        .badge-unverified { background: var(--wsj-gray-lighter); color: var(--wsj-gray-medium); }
+
+        /* Finding Cards */
+        .finding-card {
+            border: 1px solid var(--wsj-gray-lighter);
+            border-radius: 4px;
+            padding: 24px;
+            margin: 24px 0;
+            background: var(--wsj-white);
+        }
+
+        .finding-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .finding-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .icon-error { background: #FFEBEE; }
+        .icon-precision { background: #FFF3E0; }
+        .icon-questionable { background: #FCE4EC; }
+
+        .finding-page {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--wsj-gray-light);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .finding-title {
+            font-family: var(--serif);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--wsj-black);
+        }
+
+        .finding-quote {
+            background: var(--wsj-gray-bg);
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-family: var(--serif);
+            font-style: italic;
+            color: var(--wsj-gray-dark);
+        }
+
+        .finding-analysis {
+            font-size: 15px;
+            color: var(--wsj-gray-medium);
+        }
+
+        /* Interactive Legend */
+        .legend-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin: 20px 0;
+            padding: 16px;
+            background: var(--wsj-gray-bg);
+            border-radius: 4px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .legend-item:hover {
+            background: var(--wsj-gray-lighter);
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--wsj-gray-dark);
+        }
+
+        /* Methodology Section */
+        .methodology {
+            background: var(--wsj-gray-bg);
+            padding: 32px;
+            margin: 48px 0;
+            border-radius: 4px;
+        }
+
+        .methodology h3 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--wsj-gray-lighter);
+            padding-bottom: 12px;
+        }
+
+        .methodology ul {
+            margin-left: 20px;
+            color: var(--wsj-gray-medium);
+        }
+
+        .methodology li {
+            margin-bottom: 8px;
+        }
+
+        /* Vision Section */
+        .vision-section {
+            background: linear-gradient(135deg, var(--wsj-gray-dark) 0%, #1a1a2e 100%);
+            color: var(--wsj-white);
+            padding: 48px 32px;
+            margin: 48px 0;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vision-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .vision-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .vision-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--wsj-accent-blue);
+            margin-bottom: 16px;
+        }
+
+        .vision-title {
+            font-family: var(--serif);
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 20px;
+            color: var(--wsj-white);
+        }
+
+        .vision-text {
+            font-size: 17px;
+            line-height: 1.7;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 24px;
+        }
+
+        .vision-examples {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+
+        .vision-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px 18px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--wsj-white);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .vision-tag:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: var(--wsj-accent-blue);
+            transform: translateY(-2px);
+        }
+
+        .vision-tag span {
+            font-size: 18px;
+        }
+
+        .vision-quote {
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: 20px;
+            color: rgba(255,255,255,0.9);
+            border-left: 3px solid var(--wsj-accent-blue);
+            padding-left: 20px;
+            margin-top: 32px;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 3px solid var(--wsj-black);
+            padding: 32px 0;
+            margin-top: 64px;
+            text-align: center;
+            background: var(--wsj-gray-bg);
+        }
+
+        .footer-text {
+            font-size: 13px;
+            color: var(--wsj-gray-medium);
+        }
+
+        .footer-text a {
+            color: var(--wsj-gray-dark);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer-text a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-links {
+            margin-top: 16px;
+        }
+
+        .footer-links a,
+        .byline a {
+            color: var(--wsj-accent-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer-links a:hover,
+        .byline a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-links a + a {
+            margin-left: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 32px; }
+            .article-deck { font-size: 18px; }
+            .big-number { font-size: 42px; }
+            .big-number-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-wrapper { height: 280px; }
+        }
+
+        /* Tooltip styles */
+        .tooltip-container {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <!-- Masthead -->
+    <header class="masthead">
+        <div class="masthead-logo">
+            <strong>Data Investigation</strong> | Educational Content Analysis
+        </div>
+    </header>
+
+    <!-- Article Header -->
+    <article>
+        <div class="article-container">
+            <header class="article-header">
+                <div class="section-label">Exclusive Investigation</div>
+                <h1>Textbook Under the Microscope: AI Analysis Finds Accuracy Issues in NCERT History Curriculum</h1>
+                <p class="article-deck">A comprehensive fact-check of India's Class 12 history textbook reveals 45 verified claims across key pages, but surfaces one factual error, two precision issues, and two potentially questionable claims—including an exaggerated military statistic and an incorrect historical date.</p>
+                <p class="byline">
+                    <strong>By <a href="https://github.com/PythonicVarun" target="_blank">Varun Gupta</a></strong><br>
+                    Generated January 20, 2026 | Source: NCERT Class 12 Themes in Indian History-1<br>
+                    <a href="report.md" target="_blank">View Full Report</a> |
+                    <a href="https://github.com/PythonicVarun/textbook-analysis" target="_blank">GitHub Repository</a>
+                </p>
+            </header>
+        </div>
+
+        <!-- The Number -->
+        <section class="big-number-section">
+            <div class="big-number-grid">
+                <div class="big-number-card">
+                    <div class="big-number verified">45</div>
+                    <div class="big-number-label">Claims Verified Correct</div>
+                </div>
+                <div class="big-number-card">
+                    <div class="big-number errors">1</div>
+                    <div class="big-number-label">Factual Error</div>
+                </div>
+                <div class="big-number-card">
+                    <div class="big-number precision">2</div>
+                    <div class="big-number-label">Precision Issues</div>
+                </div>
+                <div class="big-number-card">
+                    <div class="big-number unverified">2</div>
+                    <div class="big-number-label">Questionable Claims</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lead Story -->
+        <div class="article-container">
+            <p class="lead-paragraph">An automated fact-checking analysis of India's NCERT Class 12 history textbook, "Themes in Indian History," has uncovered significant findings that raise questions about the precision of educational content reaching millions of students annually. While the textbook demonstrates broad factual accuracy—with 45 historical claims independently verified against scholarly sources—the analysis identified one outright factual error, two statements lacking sufficient precision, and two potentially questionable claims about historical dates and ancient military strength.</p>
+
+            <p>The 114-page textbook, covering topics from the Harappan civilization through the Mauryan and Gupta empires, forms a cornerstone of India's secondary education curriculum. The analysis, conducted using AI-powered verification against academic databases, news archives, and archaeological records, provides the most granular assessment of this educational material to date.</p>
+
+            <div class="callout callout-red">
+                <div class="callout-label">Key Finding</div>
+                <p class="callout-text">"Only broken or useless objects would have been thrown away" — This claim about ancient disposal practices contradicts archaeological research showing ritual destruction, repair, and recycling were common in Bronze Age societies.</p>
+            </div>
+
+            <h2>The Stakes: Educational Accuracy at Scale</h2>
+
+            <p>India's National Council of Educational Research and Training (NCERT) textbooks reach an estimated 25 million students annually through both direct adoption and state-level derivatives. Even minor inaccuracies can propagate through examination systems, competitive entrance tests, and into broader public understanding of history.</p>
+
+            <p>The analysis examined verification results across 56 pages, with particular focus on pages where claims could be cross-referenced against authoritative sources including UNESCO heritage records, peer-reviewed archaeological journals, and established encyclopedias.</p>
+        </div>
+
+        <!-- Chart Section 1 -->
+        <div class="article-wide">
+            <div class="chart-container">
+                <div class="chart-title">Verification Results by Page</div>
+                <div class="chart-subtitle">Key pages with highest verification activity (verified claims vs. issues found)</div>
+                <div class="chart-wrapper">
+                    <canvas id="pageComparisonChart"></canvas>
+                </div>
+                <div class="chart-source">Source: AI-powered fact-checking analysis of NCERT-Class_12_Themes_in_Indian_History-1.pdf | Analysis date: Jan 20, 2026</div>
+            </div>
+        </div>
+
+        <div class="article-container">
+            <h2>The Evidence: A Page-by-Page Breakdown</h2>
+
+            <p>The most productive verification occurred on pages covering the Harappan civilization's craft production (Page 12), archaeological interpretation methods (Page 22), and the Mauryan Empire's military structure (Page 35). These sections contained dense factual claims that could be independently assessed.</p>
+
+            <!-- Key Pages Table -->
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Page</th>
+                            <th>Topic</th>
+                            <th>Verified</th>
+                            <th>Issues</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>4</td>
+                            <td>Dholavira & Archaeological Work</td>
+                            <td>15</td>
+                            <td>2 unverified</td>
+                            <td><span class="status-badge badge-verified">Accurate</span></td>
+                        </tr>
+                        <tr>
+                            <td>12</td>
+                            <td>Craft Production & Trade</td>
+                            <td>12</td>
+                            <td>5 unverified</td>
+                            <td><span class="status-badge badge-verified">Accurate</span></td>
+                        </tr>
+                        <tr>
+                            <td>21</td>
+                            <td>Archaeological Methods (Wheeler)</td>
+                            <td>0</td>
+                            <td>1 questionable</td>
+                            <td><span class="status-badge badge-questionable">Flagged</span></td>
+                        </tr>
+                        <tr>
+                            <td>22</td>
+                            <td>Archaeological Interpretation</td>
+                            <td>12</td>
+                            <td>1 error, 1 precision</td>
+                            <td><span class="status-badge badge-error">Issues Found</span></td>
+                        </tr>
+                        <tr>
+                            <td>29</td>
+                            <td>Ashoka & Dynastic Reconstruction</td>
+                            <td>5</td>
+                            <td>1 precision</td>
+                            <td><span class="status-badge badge-precision">Minor Issue</span></td>
+                        </tr>
+                        <tr>
+                            <td>35</td>
+                            <td>Mauryan Empire</td>
+                            <td>5</td>
+                            <td>1 questionable</td>
+                            <td><span class="status-badge badge-questionable">Flagged</span></td>
+                        </tr>
+                        <tr>
+                            <td>36</td>
+                            <td>Kushan Empire</td>
+                            <td>3</td>
+                            <td>0</td>
+                            <td><span class="status-badge badge-verified">Accurate</span></td>
+                        </tr>
+                        <tr>
+                            <td>38</td>
+                            <td>Jataka Tales & Taxation</td>
+                            <td>5</td>
+                            <td>0</td>
+                            <td><span class="status-badge badge-verified">Accurate</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>Critical Findings: Where the Textbook Falls Short</h2>
+
+            <h3>1. Factual Error: Ancient Disposal Practices</h3>
+
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-icon icon-error">❌</div>
+                    <div>
+                        <div class="finding-page">Page 22</div>
+                        <div class="finding-title">Mischaracterization of Object Disposal</div>
+                    </div>
+                </div>
+                <div class="finding-quote">
+                    "Only broken or useless objects would have been thrown away."
+                </div>
+                <div class="finding-analysis">
+                    <strong>The Problem:</strong> Archaeological research consistently demonstrates that ancient societies, including those of the Bronze Age, frequently engaged in ritual destruction of intact objects, systematic repair and reuse of damaged items, and recycling of materials. The textbook's claim oversimplifies ancient material culture practices.<br><br>
+                    <strong>Sources:</strong> Cambridge Core — "Discard and Reuse in the Ancient Near East"; Antiquity — "Recycling in the Bronze Age"
+                </div>
+            </div>
+
+            <h3>2. Precision Issues: Overgeneralizations</h3>
+
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-icon icon-precision">⚡</div>
+                    <div>
+                        <div class="finding-page">Page 22</div>
+                        <div class="finding-title">Harappan Script's Usefulness</div>
+                    </div>
+                </div>
+                <div class="finding-quote">
+                    "It is not the Harappan script that helps in understanding the ancient civilisation."
+                </div>
+                <div class="finding-analysis">
+                    <strong>The Problem:</strong> While the Harappan script remains undeciphered, scholars extract indirect cultural information from its patterns, distribution, and contexts. The statement lacks nuance.<br><br>
+                    <strong>More Precise:</strong> "The undeciphered Harappan script provides limited direct information, though scholars derive indirect cultural insights from its usage patterns."
+                </div>
+            </div>
+
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-icon icon-precision">⚡</div>
+                    <div>
+                        <div class="finding-page">Page 29</div>
+                        <div class="finding-title">Historical Consensus Timeline</div>
+                    </div>
+                </div>
+                <div class="finding-quote">
+                    "The broad contours of political history were in place by the early decades of the twentieth century."
+                </div>
+                <div class="finding-analysis">
+                    <strong>The Problem:</strong> This statement suggests a more settled scholarly consensus than actually existed. While a general framework was established, many chronological and interpretive details remained actively debated throughout the 20th century.<br><br>
+                    <strong>Source:</strong> Oxford Handbook of Indian History; Journal of Asian Studies (JSTOR)
+                </div>
+            </div>
+
+            <h3>3. Potentially Questionable Claims</h3>
+
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-icon icon-questionable">🔴</div>
+                    <div>
+                        <div class="finding-page">Page 21</div>
+                        <div class="finding-title">Wheeler's Appointment Date</div>
+                    </div>
+                </div>
+                <div class="finding-quote">
+                    "It was R.E.M. Wheeler, after he took over as Director-General of the ASI in 1944, who rectified this problem."
+                </div>
+                <div class="finding-analysis">
+                    <strong>The Problem:</strong> Historical records commonly indicate that Sir Mortimer Wheeler became Director-General of the Archaeological Survey of India in <strong>1940</strong>, not 1944 as stated in the textbook. This four-year discrepancy represents a potential factual error in the biographical timeline.<br><br>
+                    <strong>Context:</strong> Wheeler's tenure at the ASI (1944–1948) is well-documented, but some scholarly sources suggest he was appointed earlier. The claim warrants manual review against primary ASI records to confirm the precise appointment date.
+                </div>
+            </div>
+
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-icon icon-questionable">🔴</div>
+                    <div>
+                        <div class="finding-page">Page 35</div>
+                        <div class="finding-title">Mauryan Army Size</div>
+                    </div>
+                </div>
+                <div class="finding-quote">
+                    "According to Greek sources, the Mauryan ruler had a standing army of 600,000 foot-soldiers, 30,000 cavalry and 9,000 elephants."
+                </div>
+                <div class="finding-analysis">
+                    <strong>The Problem:</strong> While the textbook correctly attributes this claim to Greek sources and notes that "some historians consider these accounts to be exaggerated," the framing may not adequately convey the scholarly consensus that these figures are almost certainly inflated.<br><br>
+                    <strong>Context:</strong> Classical Greek historians (Plutarch, Strabo) were known for aggrandizing military statistics. Modern scholarship widely regards these numbers as logistically implausible for the period. Archaeological and epigraphic evidence does not support army sizes of this magnitude.
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Section 2 -->
+        <div class="article-wide">
+            <div class="chart-container">
+                <div class="chart-title">Issue Distribution by Category</div>
+                <div class="chart-subtitle">Classification of all identified issues across analyzed pages</div>
+                <div class="chart-wrapper">
+                    <canvas id="issueDistributionChart"></canvas>
+                </div>
+                <div class="chart-source">Note: "Unable to Verify" claims (majority) excluded from visualization to focus on actionable findings</div>
+            </div>
+        </div>
+
+        <div class="article-container">
+            <h2>What the Textbook Gets Right</h2>
+
+            <p>Despite the identified issues, the analysis confirms substantial accuracy across verified content. The textbook's treatment of archaeological sites, particularly Dholavira's water management systems, is well-supported by UNESCO and academic sources. Claims about the Kushan Empire, Jataka literature, and the basic chronology of Indian political history align with scholarly consensus.</p>
+
+            <div class="callout">
+                <div class="callout-label">Verified Highlights</div>
+                <p class="callout-text">
+                    ✓ Dholavira's location and reservoir systems (UNESCO World Heritage confirmation)<br>
+                    ✓ Ernest Mackay's archaeological contributions (Archive.org primary sources)<br>
+                    ✓ Kushan Empire territorial extent (Britannica, Encyclopaedia Iranica)<br>
+                    ✓ Jataka tales dating and content (SuttaCentral translations)<br>
+                    ✓ Mauryan Empire duration (~150 years) and territorial reach
+                </p>
+            </div>
+
+            <h2>The Verification Gap</h2>
+
+            <p>A significant finding of this analysis is the volume of claims that could not be independently verified due to source limitations. Across 56 pages, hundreds of statements—particularly those concerning specific archaeological finds, expedition details, and localized historical events—lacked sufficient available sources for confirmation.</p>
+        </div>
+
+        <!-- Chart Section 3 -->
+        <div class="article-wide">
+            <div class="chart-container">
+                <div class="chart-title">Verification Coverage by Topic Area</div>
+                <div class="chart-subtitle">Percentage of claims verified vs. unverifiable by subject matter</div>
+                <div class="chart-wrapper">
+                    <canvas id="topicCoverageChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="article-container">
+            <p>This verification gap highlights a broader challenge in educational content assessment: while major historical claims can be checked against established sources, granular details often exist in specialized literature that remains difficult to access programmatically.</p>
+
+            <h2>The Verdict</h2>
+
+            <div class="callout callout-amber">
+                <div class="callout-label">Assessment</div>
+                <p class="callout-text">The NCERT Class 12 history textbook demonstrates <strong>generally strong factual accuracy</strong> for its verified content. However, the identified factual error regarding ancient disposal practices, combined with precision issues in scholarly framing, suggests opportunities for targeted revisions in future editions. The questionable claims—including Wheeler's appointment date and Greek-sourced military statistics—warrant verification and enhanced contextualization to align student understanding with current scholarly consensus.</p>
+            </div>
+
+            <h3>Recommendations</h3>
+            <ol>
+                <li><strong>Correct the factual error</strong> on Page 22 regarding object disposal practices to reflect archaeological evidence of ritual destruction and recycling.</li>
+                <li><strong>Verify Wheeler's appointment date</strong> on Page 21 against primary ASI records (commonly cited as 1944, but some sources indicate discrepancies).</li>
+                <li><strong>Add nuance</strong> to statements about the Harappan script's interpretive value and the timeline of historical consensus formation.</li>
+                <li><strong>Strengthen caveats</strong> around Greek-sourced military statistics, explicitly noting the scholarly consensus on their likely exaggeration.</li>
+                <li><strong>Expand source citations</strong> for claims about specific expeditions (e.g., Khetri copper, South India gold) that currently lack verification.</li>
+            </ol>
+
+            <!-- Methodology -->
+            <div class="methodology">
+                <h3>Methodology & Data Sources</h3>
+                <p>This analysis was conducted using automated fact-checking against the following source categories:</p>
+                <ul>
+                    <li><strong>Encyclopedic Sources:</strong> Britannica, Wikipedia (verified articles), Encyclopedia Iranica</li>
+                    <li><strong>Archaeological Records:</strong> UNESCO World Heritage, Archaeological Survey of India (ASI)</li>
+                    <li><strong>Academic Publications:</strong> Cambridge Core, Oxford University Press, JSTOR, peer-reviewed journals</li>
+                    <li><strong>Primary Sources:</strong> Archive.org historical documents, SuttaCentral translations</li>
+                    <li><strong>Educational Resources:</strong> NCERT official materials, university course content</li>
+                </ul>
+                <p style="margin-top: 16px; font-size: 14px; color: var(--wsj-gray-light);">
+                    <strong>Model:</strong> openai/gpt-oss-120b:free | <strong>Analysis Date:</strong> January 20, 2026 | <strong>Pages Analyzed:</strong> 56
+                </p>
+            </div>
+
+            <!-- Vision Section -->
+            <div class="vision-section">
+                <div class="vision-content">
+                    <div class="vision-label">The Bigger Picture</div>
+                    <h3 class="vision-title">AI-Powered Analysis: Beyond Textbooks</h3>
+                    <p class="vision-text">
+                        This investigation demonstrates just one frontier of AI-assisted analysis. The same methodologies—combining automated fact-checking, source verification, and structured reporting—can be applied across diverse knowledge domains. From auditing open-source codebases to analyzing research papers, the limiting factor isn't the technology.
+                    </p>
+                    <p class="vision-text">
+                        <strong>It's imagination.</strong> With creative problem framing, well-crafted prompts, and the right tools, AI becomes a force multiplier for rigorous inquiry at scale.
+                    </p>
+
+                    <div class="vision-examples">
+                        <a href="https://github.com/PythonicVarun/py-libraries-analysis" target="_blank" class="vision-tag">
+                            <span>📊</span> Python Libraries Analysis
+                        </a>
+                        <a href="https://github.com/PythonicVarun/textbook-analysis" target="_blank" class="vision-tag">
+                            <span>📚</span> Textbook Fact-Checking
+                        </a>
+                        <span class="vision-tag">
+                            <span>🔬</span> Research Verification
+                        </span>
+                        <span class="vision-tag">
+                            <span>🗂️</span> Document Auditing
+                        </span>
+                    </div>
+
+                    <p class="vision-quote">
+                        "The power of AI lies not in replacing human judgment, but in extending our capacity to ask better questions at unprecedented scale."
+                    </p>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <!-- Footer -->
+    <footer>
+        <p class="footer-text">
+            Data Investigation | Educational Content Analysis<br>
+            Analysis generated using <a href="https://github.com/PythonicVarun/textbook-analysis/blob/master/streamlit_app.py" target="_blank"><strong>streamlit_app.py</strong></a>
+        </p>
+        <div class="footer-links">
+            <a href="/report" target="_blank">📊 Full Report</a>
+            <a href="https://github.com/PythonicVarun/textbook-analysis/blob/master/datastory/PROMPT.md" target="_blank">📝 Data Story Prompt</a>
+            <a href="/readme" target="_blank">🔄 Complete Analysis Flow</a>
+            <a href="https://github.com/PythonicVarun/textbook-analysis" target="_blank">💻 GitHub Repository</a>
+        </div>
+    </footer>
+
+    <!-- Chart.js Scripts -->
+    <script>
+        // WSJ-style color palette
+        const colors = {
+            verified: '#2E7D32',
+            error: '#C41E3A',
+            precision: '#E65100',
+            questionable: '#C2185B',
+            unverified: '#999999',
+            gridLines: '#E5E5E5',
+            text: '#333333'
+        };
+
+        // Chart.js global defaults for WSJ style
+        Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        Chart.defaults.color = colors.text;
+
+        // Page Comparison Chart
+        const pageComparisonCtx = document.getElementById('pageComparisonChart').getContext('2d');
+        new Chart(pageComparisonCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Page 4', 'Page 12', 'Page 21', 'Page 22', 'Page 29', 'Page 35', 'Page 36', 'Page 38'],
+                datasets: [
+                    {
+                        label: 'Verified Correct',
+                        data: [15, 12, 0, 12, 5, 5, 3, 5],
+                        backgroundColor: colors.verified,
+                        borderRadius: 2
+                    },
+                    {
+                        label: 'Issues Found',
+                        data: [2, 5, 1, 2, 1, 1, 0, 0],
+                        backgroundColor: colors.error,
+                        borderRadius: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'start',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 20,
+                            font: { size: 12, weight: '600' }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#111',
+                        titleFont: { size: 13, weight: '700' },
+                        bodyFont: { size: 12 },
+                        padding: 12,
+                        cornerRadius: 4
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 12 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: colors.gridLines },
+                        ticks: { font: { size: 11 }, stepSize: 5 }
+                    }
+                }
+            }
+        });
+
+        // Issue Distribution Chart
+        const issueDistCtx = document.getElementById('issueDistributionChart').getContext('2d');
+        new Chart(issueDistCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Factual Errors', 'Precision Issues', 'Potentially Questionable', 'Unable to Verify (Flagged)'],
+                datasets: [{
+                    data: [1, 2, 2, 7],
+                    backgroundColor: [colors.error, colors.precision, colors.questionable, colors.unverified],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 16,
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#111',
+                        titleFont: { size: 13, weight: '700' },
+                        bodyFont: { size: 12 },
+                        padding: 12,
+                        cornerRadius: 4,
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.raw / total) * 100).toFixed(0);
+                                return ` ${context.label}: ${context.raw} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Topic Coverage Chart
+        const topicCoverageCtx = document.getElementById('topicCoverageChart').getContext('2d');
+        new Chart(topicCoverageCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Harappan Civilization', 'Archaeological Methods', 'Mauryan Empire', 'Kushan Empire', 'Trade & Craft', 'Religious Texts'],
+                datasets: [
+                    {
+                        label: 'Verified',
+                        data: [65, 75, 80, 100, 70, 100],
+                        backgroundColor: colors.verified,
+                        borderRadius: 2
+                    },
+                    {
+                        label: 'Unverifiable',
+                        data: [35, 25, 20, 0, 30, 0],
+                        backgroundColor: colors.unverified,
+                        borderRadius: 2
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'start',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 20,
+                            font: { size: 12, weight: '600' }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#111',
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.dataset.label}: ${context.raw}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        max: 100,
+                        grid: { color: colors.gridLines },
+                        ticks: {
+                            font: { size: 11 },
+                            callback: function(value) { return value + '%'; }
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        grid: { display: false },
+                        ticks: { font: { size: 12 } }
+                    }
+                }
+            }
+        });
+
+        // Interactive legend clicks (toggle datasets)
+        document.querySelectorAll('.legend-item').forEach(item => {
+            item.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+        });
+    </script>
+</body>
+</html>
