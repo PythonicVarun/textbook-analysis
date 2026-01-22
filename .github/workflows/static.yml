@@ -31,7 +31,6 @@ jobs:
       - name: 🙃 Install tools
         run: |
           sudo apt-get update && sudo apt-get install -y pandoc minify
-          sudo npm install -g @mermaid-js/mermaid-cli
 
       - name: 🔨 Build Site
         run: |
@@ -41,14 +40,15 @@ jobs:
 
           # Convert README to HTML
           mkdir -p _site/readme
-          echo '{"args":["--no-sandbox"]}' > puppeteer-config.json
-          cp README.md _site/readme/
-          (
-            cd _site/readme
-            mmdc -p ../../puppeteer-config.json -i README.md -o README.md
-            curl -sL https://gist.githubusercontent.com/killercup/5917178/raw/pandoc.css -o theme.css
-            pandoc README.md -o index.html --standalone --metadata title="Textbook Analysis" --webtex --css theme.css
-          )
+
+          # Create mermaid script
+          echo '<script type="module">
+            import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+            mermaid.initialize({ startOnLoad: true });
+          </script>' > mermaid-init.html
+
+          curl -sL https://gist.githubusercontent.com/killercup/5917178/raw/pandoc.css -o _site/readme/theme.css
+          pandoc README.md -o _site/readme/index.html --standalone --metadata title="Textbook Analysis" --webtex --css theme.css -H mermaid-init.html
 
           # Convert report.md to HTML
           mkdir -p _site/report
