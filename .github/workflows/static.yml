@@ -44,7 +44,10 @@ jobs:
           # Create mermaid script
           echo '<script type="module">
             import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-            mermaid.initialize({ startOnLoad: true });
+            mermaid.initialize({ startOnLoad: false });
+            mermaid.run({
+              querySelector: ".mermaid code"
+            });
           </script>' > mermaid-init.html
 
           curl -sL https://gist.githubusercontent.com/killercup/5917178/raw/pandoc.css -o _site/readme/theme.css
