@@ -31,7 +31,6 @@ jobs:
       - name: 🙃 Install tools
         run: |
           sudo apt-get update && sudo apt-get install -y pandoc minify
-          pip install pandoc-mermaid-filter
 
       - name: 🔨 Build Site
         run: |
@@ -42,7 +41,7 @@ jobs:
           # Convert README to HTML
           mkdir -p _site/readme
           curl -sL https://gist.githubusercontent.com/killercup/5917178/raw/pandoc.css -o _site/readme/theme.css
-          pandoc README.md -o _site/readme/index.html -F pandoc-mermaid --standalone --metadata title="Textbook Analysis" --webtex --css theme.css
+          pandoc README.md -o _site/readme/index.html --standalone --metadata title="Textbook Analysis" --webtex --css theme.css
 
           # Convert report.md to HTML
           mkdir -p _site/report
