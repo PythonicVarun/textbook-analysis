@@ -517,7 +517,7 @@
             transition: all 0.2s;
         }
 
-        .vision-tag:hover {
+        .vision-tag:not(.inactive):hover {
             background: rgba(255,255,255,0.15);
             border-color: var(--wsj-accent-blue);
             transform: translateY(-2px);
@@ -641,6 +641,22 @@
                 </div>
             </div>
         </section>
+
+        <!-- Generation Prompt Callout -->
+        <div class="article-container">
+            <div class="callout" style="margin-top: 0; margin-bottom: 48px;">
+                <div class="callout-label">How This Story Was Generated</div>
+                <p class="callout-text" style="font-family: var(--sans); font-size: 15px; line-height: 1.6;">
+                    This data story was generated using <strong>Claude Opus 4.5</strong> with the following prompt approach:<br><br>
+                    Act as a WSJ senior investigative reporter converting data analysis (<code style="background: var(--wsj-gray-lighter); padding: 2px 6px; border-radius: 3px; font-size: 13px;">report.md</code>) into a single-file interactive HTML report. Use authoritative, evidence-first voice with specific figures and comparative context.<br><br>
+                    <strong>Structure:</strong> lede number → stakes → evidence (with restrained charts) → verdict → methodology.<br>
+                    <strong>Output:</strong> professional HTML with WSJ typography, muted palette, embedded CSS/JS, and interactive elements.
+                </p>
+                <p style="margin-top: 16px; margin-bottom: 0; font-size: 13px;">
+                    <a href="https://github.com/PythonicVarun/textbook-analysis/blob/master/datastory/PROMPT.md" target="_blank" style="color: var(--wsj-accent-blue); text-decoration: none; font-weight: 600;">📝 View Full Prompt →</a>
+                </p>
+            </div>
+        </div>
 
         <!-- Lead Story -->
         <div class="article-container">
@@ -942,10 +958,10 @@
                         <a href="https://github.com/PythonicVarun/textbook-analysis" target="_blank" class="vision-tag">
                             <span>📚</span> Textbook Fact-Checking
                         </a>
-                        <span class="vision-tag">
+                        <span class="vision-tag inactive">
                             <span>🔬</span> Research Verification
                         </span>
-                        <span class="vision-tag">
+                        <span class="vision-tag inactive">
                             <span>🗂️</span> Document Auditing
                         </span>
                     </div>
