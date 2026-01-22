@@ -29,7 +29,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🙃 Install tools
-        run: sudo apt-get update && sudo apt-get install -y pandoc minify
+        run: |
+          sudo apt-get update && sudo apt-get install -y pandoc minify
+          npm install --global mermaid-filter
 
       - name: 🔨 Build Site
         run: |
@@ -40,7 +42,7 @@ jobs:
           # Convert README to HTML
           mkdir -p _site/readme
           curl -sL https://gist.githubusercontent.com/killercup/5917178/raw/pandoc.css -o _site/readme/theme.css
-          pandoc README.md -o _site/readme/index.html --standalone --metadata title="Textbook Analysis" --webtex --css theme.css
+          pandoc README.md -o _site/readme/index.html -F mermaid-filter --standalone --metadata title="Textbook Analysis" --webtex --css theme.css
 
           # Convert report.md to HTML
           mkdir -p _site/report
