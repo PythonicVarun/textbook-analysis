@@ -56,7 +56,7 @@ jobs:
       - name: 🖋️ Add credits to CSS
         run: |
           echo "/* Credits: https://gist.github.com/killercup/5917178#file-pandoc-css */" | cat - _site/readme/theme.css > temp && mv temp _site/readme/theme.css
-          echo "/* Credits: https://gist.github.com/killercup/5917178#file-pandoc-css */" | cat - _site/report/theme.css > temp && mv temp _site/datastory/report/theme.css
+          echo "/* Credits: https://gist.github.com/killercup/5917178#file-pandoc-css */" | cat - _site/report/theme.css > temp && mv temp _site/report/theme.css
 
       - name: 📦 Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
