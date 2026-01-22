@@ -43,9 +43,9 @@ jobs:
           pandoc README.md -o _site/readme/index.html --standalone --metadata title="Textbook Analysis" --webtex --css theme.css
 
           # Convert report.md to HTML
-          mkdir -p _site/datastory/report
-          curl -sL https://gist.githubusercontent.com/killercup/5917178/raw/pandoc.css -o _site/datastory/report/theme.css
-          pandoc datastory/report.md -o _site/datastory/report/index.html --standalone --metadata title="Textbook Fact-Checking Report" --webtex --css theme.css
+          mkdir -p _site/report
+          curl -sL https://gist.githubusercontent.com/killercup/5917178/raw/pandoc.css -o _site/report/theme.css
+          pandoc datastory/report.md -o _site/report/index.html --standalone --metadata title="Textbook Fact-Checking Report" --webtex --css theme.css
 
       - name: 📂 Minify static files
         run: |
@@ -54,7 +54,7 @@ jobs:
       - name: 🖋️ Add credits to CSS
         run: |
           echo "/* Credits: https://gist.github.com/killercup/5917178#file-pandoc-css */" | cat - _site/readme/theme.css > temp && mv temp _site/readme/theme.css
-          echo "/* Credits: https://gist.github.com/killercup/5917178#file-pandoc-css */" | cat - _site/datastory/report/theme.css > temp && mv temp _site/datastory/report/theme.css
+          echo "/* Credits: https://gist.github.com/killercup/5917178#file-pandoc-css */" | cat - _site/report/theme.css > temp && mv temp _site/datastory/report/theme.css
 
       - name: 📦 Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
