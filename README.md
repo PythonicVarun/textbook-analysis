@@ -2,6 +2,8 @@
 
 This AI-powered tool verifies the factual accuracy of textbooks, repositories, and documentation.
 
+This repository contains no confidential data/IP and is intended for demonstration and research use.
+
 > **Key Finding:** In a demo analyzing just 56 pages out of 114 pages, the system successfully identified a factual error, proving its capability to precise verification.
 
 **Demo Source:** [NCERT History Class 12 Textbook](https://web.archive.org/web/20260121064733/https://ncert.nic.in/textbook.php?lehs1=0-4)
@@ -75,7 +77,9 @@ While this tool demonstrates its prowess on educational material, its core engin
 > "We just need a creative thought and the power of good prompts to make AI work better."
 
 ### 🚀 Expanding Horizons
+
 We are already applying this architecture to new frontiers:
+
 - **Code Repositories**: Analyzing and verifying library documentation and logic (See: [Python Libraries Analysis](https://github.com/PythonicVarun/py-libraries-analysis))
 - **Technical Documentation**: Ensuring API docs match implementation.
 - **Legal & Financial Documents**: Cross-referencing clauses and claims against regulations.
@@ -85,5 +89,5 @@ This project is a testament that AI, when guided by structured reasoning and rob
 ## ✍️ Author
 
 **Varun (PythonicVarun)**
-- [GitHub](https://github.com/PythonicVarun)
 
+- [GitHub](https://github.com/PythonicVarun)
